@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>QWILLION — the daily dive</title>
+<link rel="icon" href="assets/qwilfish.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+<button class="menu-trigger" id="menuTrigger" aria-label="Open menu">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+</button>
+
+<button class="settings-trigger" id="settingsTrigger" aria-label="Open settings">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+</button>
+
+<main class="page">
+  <header class="hero">
+    <p class="eyebrow">QWILLION</p>
+    <h1 class="wordmark">the daily dive</h1>
+  </header>
+
+  <section class="stage">
+    <p class="stage-status" id="statusLine">descending&hellip;</p>
+
+    <div class="tier-badge">
+      <img src="assets/qwilfish.png" alt="Qwilfish" class="tier-sprite" />
+      <span class="tier-label">one in a qwillion.</span>
+    </div>
+
+    <div id="mainView">
+      <h2 class="dive-heading">Dive in</h2>
+      <p class="dive-sub">Catch six Pok&eacute;mon to build today's team. No repeats.</p>
+
+      <article class="quiz-card" id="runQuizCard" aria-busy="true">
+        <p class="quiz-kicker" id="runProgress">Question 1 of 6</p>
+        <h3 class="quiz-question" id="runQuestion">Loading a question&hellip;</h3>
+
+        <form class="quiz-form" id="runForm" autocomplete="off">
+          <input type="text" id="runInput" class="quiz-input" placeholder="Name a Pok&eacute;mon&hellip;" aria-label="Your guess" />
+          <button type="submit" class="quiz-submit">Dive</button>
+        </form>
+
+        <div class="quiz-feedback" id="runFeedback" role="status" aria-live="polite"></div>
+
+        <button type="button" class="quiz-next" id="runContinue" hidden>Continue &rarr;</button>
+      </article>
+
+      <section class="team-reveal" id="teamReveal" hidden>
+        <p class="quiz-kicker">Your team</p>
+        <h3 class="team-reveal-heading">Six caught. Nice dive.</h3>
+        <div class="team-grid" id="teamGrid"></div>
+        <button type="button" class="quiz-next" id="playAgainBtn">New team &#8635;</button>
+      </section>
+
+      <p class="section-kicker">Featured catch</p>
+      <article class="dex-card" id="dexCard" aria-busy="true">
+        <div class="dex-card-top">
+          <div class="dex-art">
+            <img src="assets/qwilfish.png" alt="Qwilfish sprite" class="dex-sprite" />
+          </div>
+          <div class="dex-id">
+            <p class="dex-number" id="dexNumber">#&ndash;&ndash;&ndash;</p>
+            <h3 class="dex-name" id="dexName">QWILFISH</h3>
+            <div class="dex-types" id="dexTypes"></div>
+          </div>
+        </div>
+
+        <p class="dex-flavor" id="dexFlavor">Loading entry from the Pok&eacute;dex&hellip;</p>
+
+        <dl class="dex-stats" id="dexStats"></dl>
+
+        <div class="dex-meta">
+          <div><dt>Height</dt><dd id="dexHeight">&ndash;</dd></div>
+          <div><dt>Weight</dt><dd id="dexWeight">&ndash;</dd></div>
+          <div><dt>Abilities</dt><dd id="dexAbilities">&ndash;</dd></div>
+        </div>
+      </article>
+
+      <a class="keep-diving" id="keepDiving" href="https://pokeapi.co/api/v2/pokemon/qwilfish" target="_blank" rel="noopener">view raw dex data &rarr;</a>
+    </div>
+
+    <div id="devModeView" hidden>
+      <h2 class="dive-heading">Dev Mode</h2>
+      <p class="dive-sub">Unlimited practice questions. Same engine, no team limit, repeats allowed.</p>
+
+      <article class="quiz-card" id="devQuizCard" aria-busy="true">
+        <p class="quiz-kicker">Clue</p>
+        <h3 class="quiz-question" id="devQuizQuestion">Loading a question&hellip;</h3>
+
+        <form class="quiz-form" id="devQuizForm" autocomplete="off">
+          <input type="text" id="devQuizInput" class="quiz-input" placeholder="Name a Pok&eacute;mon&hellip;" aria-label="Your guess" />
+          <button type="submit" class="quiz-submit">Dive</button>
+        </form>
+
+        <div class="quiz-feedback" id="devQuizFeedback" role="status" aria-live="polite"></div>
+
+        <button type="button" class="quiz-next" id="devQuizNext">New question &#8635;</button>
+      </article>
+    </div>
+  </section>
+</main>
+
+<dialog id="menuDialog" class="menu-dialog">
+  <div class="menu-panel">
+    <div class="menu-header">
+      <div>
+        <p class="eyebrow small">QWILLION</p>
+        <h2>Menu</h2>
+      </div>
+      <button class="dialog-close" id="menuClose" aria-label="Close menu">&times;</button>
+    </div>
+    <hr class="rule" />
+    <nav class="menu-nav">
+      <a href="#" id="navMainView" aria-current="page"><span class="symbol">&#9679;</span>Daily dive</a>
+      <a href="#"><span class="symbol">&#8734;</span>Unlimited</a>
+      <a href="#"><span class="symbol">&#127778;</span>Puffer Party</a>
+      <a href="#"><span class="symbol">&#8635;</span>Archive</a>
+      <a href="#"><span class="symbol">&#128230;</span>Themed packs</a>
+      <a href="#"><span class="symbol">&#128100;</span>My Qwillion</a>
+      <a href="#"><span class="symbol">&#128101;</span>Friends</a>
+      <a href="#"><span class="symbol">&#9881;</span>Settings</a>
+      <a href="#" id="navDevMode"><span class="symbol">&#128295;</span>Dev Mode</a>
+      <a href="#"><span class="symbol">?</span>FAQ</a>
+    </nav>
+    <p class="menu-footer">Qwillion is a fan-made, non-commercial project. Pok&eacute;mon data via PokeAPI. Catch rarity is estimated from Bulbapedia's 2026 most/least-visited article rankings, Google Trends search interest (via poke-trends.com, generation-bias corrected), and a 2019 favorite-Pok&eacute;mon survey. Not affiliated with Nintendo, Game Freak, or The Pok&eacute;mon Company.</p>
+  </div>
+</dialog>
+
+<dialog id="settingsDialog" class="settings-dialog">
+  <div class="settings-panel">
+    <button class="dialog-close" id="settingsClose" aria-label="Close settings">&times;</button>
+    <h2>Settings</h2>
+    <hr class="rule" />
+    <div class="pref-list">
+      <label class="pref">
+        <span class="pref-copy">
+          <span class="pref-label">Reduce motion</span>
+          <span class="pref-desc">Turns off glow pulses and transitions.</span>
+        </span>
+        <span class="toggle"><input type="checkbox" id="reduceMotionToggle" /><span class="track"><span class="thumb"></span></span></span>
+      </label>
+      <label class="pref">
+        <span class="pref-copy">
+          <span class="pref-label">High contrast</span>
+          <span class="pref-desc">Brighter foam text, less drift.</span>
+        </span>
+        <span class="toggle"><input type="checkbox" id="highContrastToggle" /><span class="track"><span class="thumb"></span></span></span>
+      </label>
+    </div>
+  </div>
+</dialog>
+
+<script src="data/pokemon-stats.js"></script>
+<script src="data/popularity-survey-2019.js"></script>
+<script src="data/popularity-bulbapedia-2026.js"></script>
+<script src="data/popularity-googletrends.js"></script>
+<script src="js/quiz.js"></script>
+<script src="js/run-quiz-ui.js"></script>
+<script src="js/quiz-ui.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

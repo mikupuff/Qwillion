@@ -58,12 +58,14 @@
   // most-obscure 5% of the pool (rounded up, at least one guaranteed), Ultra
   // Ball the next slice up to 12%, Great Ball up to 25%, Premier Ball up to
   // 50%, and Poké Ball the remaining (most popular) half.
+  // Points per ball, in the spirit of Krillion's rarity scoring
+  // (10 / 30 / 60 / 85 / 100). Each point is also 10 m of "depth".
   var TIER_DEFS = [
-    { key: "poke", label: "Poké Ball", sprite: "assets/balls/poke-ball.png", description: "common answer.", color: "#ff4444" },
-    { key: "premier", label: "Premier Ball", sprite: "assets/balls/premier-ball.png", description: "solid pick.", color: "#ffb3c6" },
-    { key: "great", label: "Great Ball", sprite: "assets/balls/great-ball.png", description: "good find.", color: "#4fa3e3" },
-    { key: "ultra", label: "Ultra Ball", sprite: "assets/balls/ultra-ball.png", description: "rare pull.", color: "#ffcc33" },
-    { key: "master", label: "Master Ball", sprite: "assets/balls/master-ball.png", description: "one in a Qwillion.", color: "#c77dff" }
+    { key: "poke", points: 10, label: "Poké Ball", sprite: "assets/balls/poke-ball.png", description: "common answer.", color: "#ff4444" },
+    { key: "premier", points: 30, label: "Premier Ball", sprite: "assets/balls/premier-ball.png", description: "solid pick.", color: "#ffb3c6" },
+    { key: "great", points: 60, label: "Great Ball", sprite: "assets/balls/great-ball.png", description: "good find.", color: "#4fa3e3" },
+    { key: "ultra", points: 85, label: "Ultra Ball", sprite: "assets/balls/ultra-ball.png", description: "rare pull.", color: "#ffcc33" },
+    { key: "master", points: 100, label: "Master Ball", sprite: "assets/balls/master-ball.png", description: "one in a Qwillion.", color: "#c77dff" }
   ];
   var MASTER_BALL_FRACTION = 0.05;
   var CUMULATIVE_CEILING = { ultra: 0.12, great: 0.25, premier: 0.50 };
@@ -321,7 +323,9 @@
     } while (y === undefined && attempts < 20);
 
     var targetSet = y === null ? new Set([x]) : new Set([x, y]);
-    var label = y === null ? titleCase(x) + " type" : titleCase(x) + "/" + titleCase(y) + " type";
+    // Single-type questions read "mono-Psychic type", so it's clear a
+    // Psychic/Flying Pokemon doesn't count.
+    var label = y === null ? "mono-" + titleCase(x) + " type" : titleCase(x) + "/" + titleCase(y) + " type";
 
     function matchesType(p) {
       if (p.types.length !== targetSet.size) return false;
@@ -479,6 +483,8 @@
       ok: true,
       pokemon: pokemon,
       detail: this.current.detail(pokemon),
+      tierKey: tier.key,
+      tierPoints: tier.points,
       tierLabel: tier.label,
       tierSprite: tier.sprite,
       tierDescription: tier.description,
@@ -515,6 +521,7 @@
       questions: questions,
       usedPokemonIds: usedIds,
       team: [],
+      score: 0,
       index: 0,
       length: length
     };
@@ -549,6 +556,8 @@
     var caught = {
       pokemon: pokemon,
       detail: state.detail(pokemon),
+      tierKey: tier.key,
+      tierPoints: tier.points,
       tierLabel: tier.label,
       tierSprite: tier.sprite,
       tierDescription: tier.description,
@@ -558,6 +567,7 @@
 
     this.run.usedPokemonIds.add(pokemon.id);
     this.run.team.push(caught);
+    this.run.score += tier.points;
 
     return {
       ok: true,
@@ -571,7 +581,7 @@
     if (!this.run) throw new Error("No active run");
     this.run.index++;
     if (this.run.index >= this.run.length) {
-      return { done: true, team: this.run.team.slice() };
+      return { done: true, team: this.run.team.slice(), score: this.run.score, maxScore: this.run.length * TIER_DEFS[TIER_DEFS.length - 1].points };
     }
     var state = this.run.questions[this.run.index];
     return {
@@ -584,9 +594,15 @@
     };
   };
 
+  QwillionQuiz.prototype.getRunScore = function () {
+    return this.run ? this.run.score : 0;
+  };
+
   QwillionQuiz.prototype.getRunTeam = function () {
     return this.run ? this.run.team.slice() : [];
   };
 
+  // Ball tiers in rarity order (common -> rarest), for the UI's ball key.
+  QwillionQuiz.TIERS = TIER_DEFS;
   window.QwillionQuiz = QwillionQuiz;
 })();

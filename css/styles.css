@@ -1,11 +1,18 @@
 :root {
-  --color-abyss: #050a14;
-  --color-shallow: #101d33;
-  --color-foam: #e8f1ff;
-  --color-drift: #7d93b8;
-  --color-lumen-cyan: #4de3ff;
-  --color-lumen-pink: #ff5d8f;
-  --hairline: #1b3050;
+  /* Reef palette - matches the pixel background in js/pixel-bg.js. */
+  --color-abyss: #04101f;
+  --color-shallow: #0b2240;
+  --color-foam: #eef8ff;
+  --color-drift: #9cc0dc;
+  --color-lumen-cyan: #5ce1f0;
+  --color-lumen-pink: #ff7a6b;
+  --color-sand: #f0d488;
+  --hairline: #23507a;
+  --frame-light: #9fd8f5;
+  /* Panels: a lighter 4px "title strip" on top, slightly see-through so the
+     reef shows at the edges. */
+  --panel-bg: linear-gradient(180deg, #ffffff14 0 4px, transparent 4px), #0b2240ed;
+  --text-shadow-pixel: 2px 2px 0 #04101f;
   --font-ui: "VT323", ui-monospace, monospace;
 }
 
@@ -20,11 +27,20 @@ html, body {
 }
 
 body {
-  background-image:
-    repeating-linear-gradient(0deg, #ffffff06 0 1px, transparent 1px 3px),
-    radial-gradient(ellipse at 50% -10%, #12254080 0%, transparent 60%);
-  background-attachment: fixed;
+  /* Transparent so the fixed reef canvas (z-index -1) isn't painted over;
+     html keeps the dark fallback color. */
+  background: transparent;
   letter-spacing: 0.02em;
+}
+
+/* Animated pixel reef behind everything (drawn by js/pixel-bg.js). */
+.pixel-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  image-rendering: pixelated;
+  pointer-events: none;
 }
 
 img { image-rendering: pixelated; }
@@ -77,7 +93,7 @@ hr.rule {
   letter-spacing: 0.24em;
   text-transform: uppercase;
   font-size: 13px;
-  text-shadow: 0 0 8px #4de3ff73;
+  text-shadow: var(--text-shadow-pixel);
 }
 .eyebrow.small { font-size: 11px; margin: 0 0 3px; }
 
@@ -88,7 +104,8 @@ hr.rule {
   font-size: clamp(34px, 9vw, 52px);
   line-height: 1;
   margin: 6px 0 0;
-  text-shadow: -3px 2px #ff5d8fd9, 3px -2px #4de3ffbf, 0 0 16px #4de3ff4d;
+  color: #fff6dc;
+  text-shadow: 3px 3px 0 var(--color-lumen-pink), 6px 6px 0 var(--color-abyss);
 }
 
 /* ---------- Stage ---------- */
@@ -100,6 +117,7 @@ hr.rule {
   letter-spacing: 0.2em;
   text-transform: uppercase;
   font-size: 14px;
+  text-shadow: var(--text-shadow-pixel);
   animation: blink 2.2s steps(2, end) infinite;
 }
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
@@ -119,6 +137,7 @@ hr.rule {
 }
 .tier-label {
   color: var(--color-lumen-pink);
+  text-shadow: var(--text-shadow-pixel);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   font-size: 16px;
@@ -130,15 +149,18 @@ hr.rule {
   letter-spacing: 0.06em;
   font-size: clamp(26px, 6vw, 34px);
   margin: 26px 0 4px;
+  text-shadow: 3px 3px 0 var(--color-abyss);
 }
 .dive-sub {
-  color: var(--color-drift);
+  color: var(--color-foam);
+  text-shadow: var(--text-shadow-pixel);
   font-size: 16px;
   margin: 0 0 30px;
 }
 
 .section-kicker {
-  color: var(--color-drift);
+  color: var(--color-sand);
+  text-shadow: var(--text-shadow-pixel);
   letter-spacing: 0.16em;
   text-transform: uppercase;
   font-size: 13px;
@@ -150,9 +172,14 @@ hr.rule {
 
 .quiz-card {
   text-align: left;
-  background: repeating-linear-gradient(0deg, #00000029 0 1px, transparent 1px 3px), var(--color-shallow);
-  box-shadow: 0 0 0 3px var(--color-abyss), 0 0 0 5px var(--color-lumen-pink), 10px 10px 0 #02050bd9, 0 0 24px #ff5d8f29;
+  background: var(--panel-bg);
+  box-shadow: 0 0 0 3px var(--color-abyss), 0 0 0 6px var(--color-lumen-pink), 0 0 0 9px var(--color-abyss), 9px 9px 0 6px #04101fb3;
   padding: 24px 22px 22px;
+}
+.run-score {
+  float: right;
+  color: var(--color-sand);
+  letter-spacing: 0.1em;
 }
 .quiz-kicker {
   color: var(--color-lumen-pink);
@@ -177,7 +204,7 @@ hr.rule {
   flex: 1;
   min-width: 0;
   min-height: 46px;
-  background: #03070f;
+  background: #061a30;
   color: var(--color-foam);
   border: 0;
   box-shadow: inset 0 3px 5px #000000e6, 0 0 0 2px var(--hairline);
@@ -194,7 +221,7 @@ hr.rule {
   flex: none;
   min-height: 46px;
   padding: 0 20px;
-  color: #050a14;
+  color: var(--color-abyss);
   background: var(--color-lumen-pink);
   border: 0;
   letter-spacing: 0.1em;
@@ -202,11 +229,11 @@ hr.rule {
   font-family: var(--font-ui);
   font-size: 17px;
   cursor: pointer;
-  box-shadow: 0 0 0 2px #050a14, 0 3px 0 2px #8a1f44;
+  box-shadow: 0 0 0 2px var(--color-abyss), 0 3px 0 2px #a8392e;
   transition: background .15s, transform 60ms steps(2, end);
 }
-.quiz-submit:hover { background: #ff8fae; }
-.quiz-submit:active { transform: translateY(2px); box-shadow: 0 0 0 2px #050a14, 0 1px 0 2px #8a1f44; }
+.quiz-submit:hover { background: #ff9d90; }
+.quiz-submit:active { transform: translateY(2px); box-shadow: 0 0 0 2px var(--color-abyss), 0 1px 0 2px #a8392e; }
 
 .quiz-feedback {
   min-height: 24px;
@@ -365,11 +392,11 @@ hr.rule {
   font-size: 14px;
   padding: 10px 16px;
   cursor: pointer;
-  box-shadow: 0 0 0 2px #050a14, 0 0 0 4px var(--hairline), 0 3px 0 4px #0b1424;
+  box-shadow: 0 0 0 2px var(--color-abyss), 0 0 0 4px var(--hairline), 0 3px 0 4px #0b1424;
 }
 .quiz-next:hover, .quiz-next:focus-visible {
   color: var(--color-foam);
-  box-shadow: 0 0 0 2px #050a14, 0 0 0 4px var(--color-lumen-cyan), 0 3px 0 4px #123048;
+  box-shadow: 0 0 0 2px var(--color-abyss), 0 0 0 4px var(--color-lumen-cyan), 0 3px 0 4px #123048;
   outline: none;
 }
 
@@ -378,12 +405,215 @@ hr.rule {
   .quiz-submit { padding: 12px; }
 }
 
+/* ---------- Ball key (under the Dive form) ----------
+   All five balls in rarity order, joined by a line. The ball you just
+   caught with lights up in its tier color, the line fills up to it, and
+   the caption below shows its name and description. */
+
+.ball-key { margin-top: 20px; }
+.ball-key-row {
+  --fill: 0;
+  list-style: none;
+  margin: 0;
+  padding: 0 4px;
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+}
+.ball-key-row::before,
+.ball-key-row::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 24px;
+  height: 4px;
+  margin-top: -2px;
+}
+.ball-key-row::before {
+  right: 24px;
+  background: var(--hairline);
+  box-shadow: 0 0 0 2px var(--color-abyss);
+}
+.ball-key-row::after {
+  width: calc((100% - 48px) * var(--fill));
+  background: var(--color-sand);
+  transition: width 0.4s steps(8, end);
+}
+.ball-key-item {
+  position: relative;
+  z-index: 1;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  background: var(--color-abyss);
+  box-shadow: 0 0 0 2px var(--hairline);
+  transition: transform 0.15s steps(3, end), box-shadow 0.15s steps(3, end);
+}
+.ball-key-item img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  opacity: 0.45;
+  filter: grayscale(0.8);
+  transition: opacity 0.15s steps(3, end), filter 0.15s steps(3, end);
+}
+.ball-key-item.is-passed img { opacity: 0.8; filter: none; }
+.ball-key-item.is-passed { box-shadow: 0 0 0 2px var(--color-sand); }
+.ball-key-item.is-lit {
+  transform: scale(1.25);
+  box-shadow: 0 0 0 2px var(--color-abyss), 0 0 0 4px var(--tier-color), 0 0 16px var(--tier-color);
+  animation: ball-key-pop 0.5s steps(5, end);
+}
+.ball-key-item.is-lit img { opacity: 1; filter: none; }
+@keyframes ball-key-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.45); }
+  100% { transform: scale(1.25); }
+}
+.ball-key-caption {
+  margin: 26px 0 0;
+  min-height: 22px;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.ball-key-label {
+  color: var(--color-drift);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 14px;
+}
+.ball-key-points {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 5px;
+  color: var(--color-drift);
+  font-size: 13px;
+  line-height: 1;
+}
+.ball-key-item.is-lit .ball-key-points { color: var(--color-sand); font-size: 11px; }
+.ball-key-gain { color: var(--color-sand); font-size: 19px; text-shadow: var(--text-shadow-pixel); }
+.ball-key-desc { color: var(--color-drift); font-size: 15px; opacity: 0.75; }
+.ball-key.has-lit .ball-key-label { font-size: 19px; text-shadow: var(--text-shadow-pixel); }
+.ball-key.has-lit .ball-key-desc { color: var(--color-foam); font-size: 17px; opacity: 1; }
+
+/* ---------- Team rail ----------
+   Your six slots, filling in as you catch. A row above the quiz on narrow
+   screens; a column fixed to the left of the page on wide ones. */
+
+.team-rail {
+  margin: 0 0 26px;
+  text-align: left;
+}
+.team-rail-title {
+  color: var(--color-sand);
+  text-shadow: var(--text-shadow-pixel);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: 13px;
+  margin: 0 0 10px;
+}
+.team-rail-slots {
+  list-style: none;
+  margin: 0;
+  padding: 0 4px;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+}
+.team-rail-slot {
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  background: var(--panel-bg);
+  box-shadow: 0 0 0 2px var(--color-abyss), 0 0 0 4px var(--hairline);
+}
+.team-rail-slot.is-filled {
+  box-shadow: 0 0 0 2px var(--color-abyss), 0 0 0 4px var(--frame-light);
+  animation: team-rail-pop 0.4s steps(4, end);
+}
+@keyframes team-rail-pop {
+  0% { transform: scale(0.7); }
+  60% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+.team-rail-placeholder {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #ffffff1f 0 45%, var(--color-abyss) 45% 55%, #00000033 55%);
+  box-shadow: 0 0 0 2px var(--hairline);
+}
+.team-rail-sprite {
+  width: 100%;
+  max-width: 56px;
+  aspect-ratio: 1;
+  object-fit: contain;
+}
+.team-rail-text { display: none; }
+
+@media (min-width: 960px) {
+  .team-rail {
+    position: fixed;
+    top: 50%;
+    left: max(16px, calc(50vw - 480px));
+    transform: translateY(-50%);
+    width: 176px;
+    margin: 0;
+    z-index: 5;
+  }
+  .team-rail-slots { grid-template-columns: 1fr; gap: 12px; }
+  .team-rail-slot {
+    aspect-ratio: auto;
+    min-height: 56px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 8px 2px 4px;
+  }
+  .team-rail-slot.is-empty { justify-content: center; }
+  .team-rail-sprite { width: 52px; flex: none; }
+  .team-rail-text { display: flex; flex-direction: column; min-width: 0; }
+  .team-rail-name {
+    color: var(--color-foam);
+    font-size: 17px;
+    line-height: 1.1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .team-rail-tier {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .team-rail-tier img { width: 14px; height: 14px; object-fit: contain; }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
 /* ---------- Dex card ---------- */
 
 .dex-card {
   text-align: left;
-  background: repeating-linear-gradient(0deg, #00000029 0 1px, transparent 1px 3px), var(--color-shallow);
-  box-shadow: 0 0 0 3px var(--color-abyss), 0 0 0 5px var(--hairline), 10px 10px 0 #02050bd9;
+  background: var(--panel-bg);
+  box-shadow: 0 0 0 3px var(--color-abyss), 0 0 0 6px var(--frame-light), 0 0 0 9px var(--color-abyss), 9px 9px 0 6px #04101fb3;
   padding: 24px 22px 22px;
 }
 
@@ -459,7 +689,7 @@ hr.rule {
 }
 .stat-bar {
   height: 10px;
-  background: #03070f;
+  background: #061a30;
   box-shadow: inset 0 2px 4px #000000e6, 0 0 0 1px var(--hairline);
   position: relative;
 }
@@ -521,8 +751,8 @@ hr.rule {
   margin: 0 0 24px;
 }
 .team-slot {
-  background: repeating-linear-gradient(0deg, #00000029 0 1px, transparent 1px 3px), var(--color-shallow);
-  box-shadow: 0 0 0 2px var(--color-abyss), 0 0 0 4px var(--hairline), 6px 6px 0 #02050bd9;
+  background: var(--panel-bg);
+  box-shadow: 0 0 0 2px var(--color-abyss), 0 0 0 4px var(--frame-light), 0 0 0 6px var(--color-abyss), 6px 6px 0 4px #04101fb3;
   padding: 16px 8px 14px;
   text-align: center;
 }
@@ -556,6 +786,46 @@ hr.rule {
   letter-spacing: 0.03em;
   margin-top: 10px;
 }
+.team-slot-points {
+  color: var(--color-sand);
+  font-size: 14px;
+  margin: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease-out 0.2s;
+}
+.team-slot.revealed .team-slot-points { opacity: 1; }
+
+/* Final score on the team screen: counts up after the last ball opens. */
+.team-score {
+  margin: -8px auto 24px;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.3s steps(3, end), transform 0.3s steps(3, end);
+}
+.team-score.is-shown { opacity: 1; transform: none; }
+.team-score-label {
+  color: var(--color-sand);
+  text-shadow: var(--text-shadow-pixel);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: 13px;
+  margin: 0;
+}
+.team-score-points {
+  color: #fff6dc;
+  font-size: clamp(44px, 12vw, 64px);
+  line-height: 1;
+  margin: 4px 0 2px;
+  text-shadow: 3px 3px 0 var(--color-lumen-pink), 6px 6px 0 var(--color-abyss);
+}
+.team-score-sub {
+  color: var(--color-foam);
+  text-shadow: var(--text-shadow-pixel);
+  font-size: 17px;
+  margin: 0;
+}
+
+
 .team-slot-tier {
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -590,18 +860,18 @@ hr.rule {
 .keep-diving {
   display: inline-block;
   margin-top: 30px;
-  color: #050a14;
+  color: var(--color-abyss);
   background: var(--color-lumen-cyan);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   text-decoration: none;
   padding: 12px 20px 10px;
   font-size: 18px;
-  box-shadow: 0 0 0 2px #050a14, 0 3px 0 2px #16758a, 0 0 16px #4de3ff59;
+  box-shadow: 0 0 0 2px var(--color-abyss), 0 3px 0 2px #16758a, 0 0 16px #4de3ff59;
   transition: background .15s, transform 60ms steps(2, end);
 }
 .keep-diving:hover { background: #8eeeff; }
-.keep-diving:active { transform: translateY(2px); box-shadow: 0 0 0 2px #050a14, 0 1px 0 2px #16758a; }
+.keep-diving:active { transform: translateY(2px); box-shadow: 0 0 0 2px var(--color-abyss), 0 1px 0 2px #16758a; }
 
 /* ---------- Dialogs ---------- */
 
@@ -611,16 +881,16 @@ dialog {
   border: 0;
   padding: 0;
   margin: auto;
-  box-shadow: 0 0 0 3px var(--color-abyss), 0 0 0 5px var(--hairline), 10px 10px 0 #02050bd9, 0 0 38px #4de3ff24;
+  box-shadow: 0 0 0 3px var(--color-abyss), 0 0 0 6px var(--frame-light), 0 0 0 9px var(--color-abyss), 9px 9px 0 6px #04101fb3;
 }
-dialog::backdrop { background: #02050bd1; }
+dialog::backdrop { background: #04101fc2; }
 
 .menu-dialog, .settings-dialog {
   width: min(430px, 100vw - 36px);
 }
 
 .menu-panel, .settings-panel {
-  background: repeating-linear-gradient(0deg, #00000029 0 1px, transparent 1px 3px), var(--color-shallow);
+  background: var(--panel-bg);
   padding: 22px;
   position: relative;
 }
@@ -636,7 +906,8 @@ dialog::backdrop { background: #02050bd1; }
   font-family: var(--font-ui);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  text-shadow: -2px 1px #ff5d8fcc, 2px -1px #4de3ffb3, 0 0 14px #4de3ff40;
+  color: #fff6dc;
+  text-shadow: 2px 2px 0 var(--color-lumen-pink), 4px 4px 0 var(--color-abyss);
   font-size: 34px;
   font-weight: 400;
   margin: 0;
@@ -655,12 +926,12 @@ dialog::backdrop { background: #02050bd1; }
   line-height: 1;
   padding: 0 0 3px;
   cursor: pointer;
-  box-shadow: 0 0 0 2px #050a14, 0 0 0 4px var(--hairline), 0 3px 0 4px #0d1a2e;
+  box-shadow: 0 0 0 2px var(--color-abyss), 0 0 0 4px var(--hairline), 0 3px 0 4px #0d1a2e;
 }
 .settings-panel .dialog-close { position: absolute; top: 16px; right: 16px; }
 .dialog-close:hover, .dialog-close:focus-visible {
   color: var(--color-foam);
-  box-shadow: 0 0 0 2px #050a14, 0 0 0 4px var(--color-lumen-cyan), 0 3px 0 4px #123048;
+  box-shadow: 0 0 0 2px var(--color-abyss), 0 0 0 4px var(--color-lumen-cyan), 0 3px 0 4px #123048;
   outline: none;
 }
 
@@ -685,16 +956,16 @@ dialog::backdrop { background: #02050bd1; }
   background: #0d1830;
   font-size: 15px;
   padding: 12px 6px 10px;
-  box-shadow: 0 0 0 2px #050a14, 0 0 0 4px var(--hairline), 0 4px 0 4px #0b1424;
+  box-shadow: 0 0 0 2px var(--color-abyss), 0 0 0 4px var(--hairline), 0 4px 0 4px #0b1424;
   transition: transform .1s steps(2, end);
 }
 .menu-nav a[aria-current="page"] {
   color: var(--color-lumen-pink);
-  box-shadow: 0 0 0 2px #050a14, 0 0 0 4px var(--color-lumen-pink), 0 4px 0 4px #2a1024, 0 0 14px #ff5d8f2e;
+  box-shadow: 0 0 0 2px var(--color-abyss), 0 0 0 4px var(--color-lumen-pink), 0 4px 0 4px #2a1024, 0 0 14px #ff5d8f2e;
 }
 .menu-nav a:hover, .menu-nav a:focus-visible {
   color: var(--color-foam);
-  box-shadow: 0 0 0 2px #050a14, 0 0 0 4px var(--color-lumen-cyan), 0 4px 0 4px #123048, 0 0 18px #4de3ff40;
+  box-shadow: 0 0 0 2px var(--color-abyss), 0 0 0 4px var(--color-lumen-cyan), 0 4px 0 4px #123048, 0 0 18px #4de3ff40;
   outline: none;
 }
 .menu-nav a:active { transform: translateY(3px); }
@@ -739,7 +1010,7 @@ dialog::backdrop { background: #02050bd1; }
   width: 60px;
   height: 28px;
   display: block;
-  background: #03070f;
+  background: #061a30;
   box-shadow: inset 0 3px 5px #000000e6, 0 0 0 2px #060d1a, 0 0 0 3px var(--hairline);
   position: relative;
 }
@@ -768,6 +1039,9 @@ dialog::backdrop { background: #02050bd1; }
 
 @media (prefers-reduced-motion: reduce), body[data-reduce-motion="true"] {
   .stage-status { animation: none; }
+  .ball-key-item, .ball-key-item img, .ball-key-row::after { transition: none; }
+  .ball-key-item.is-lit, .team-rail-slot.is-filled { animation: none; }
+  .team-score, .team-slot-points { transition: none; }
   .dialog-close, .menu-nav a, .keep-diving { transition: none; }
 }
 

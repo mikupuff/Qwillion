@@ -75,6 +75,7 @@
     var resultEl = feedbackEl.firstElementChild;
     window.QwillionCatchAnim.play(resultEl.querySelector(".catch-stage"), true, function () {
       resultEl.classList.add("is-revealed");
+      if (window.QwillionFeatured) window.QwillionFeatured.show(caught.pokemon.id);
       continueBtn.hidden = false;
       continueBtn.textContent = isLastQuestion ? "See my team →" : "Continue →";
       awaitingContinue = true;

@@ -81,19 +81,43 @@
     return str.replace(/-/g, " ").replace(/\b\w/g, function (c) { return c.toUpperCase(); });
   }
 
-  async function loadQwilfish() {
+  function spriteUrl(id) {
+    return "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/" + id + ".png";
+  }
+
+  // Each call bumps this, so if a newer catch lands while an older fetch is
+  // still in flight, the older one's results are dropped instead of
+  // overwriting the card.
+  var featuredRequest = 0;
+
+  // Fills the "Featured catch" card with the Pokemon whose National Dex
+  // number is `id`.
+  async function loadFeatured(id) {
+    var requestId = ++featuredRequest;
     var card = document.getElementById("dexCard");
+    card.setAttribute("aria-busy", "true");
     try {
       var [pokemonRes, speciesRes] = await Promise.all([
-        fetch("https://pokeapi.co/api/v2/pokemon/qwilfish"),
-        fetch("https://pokeapi.co/api/v2/pokemon-species/qwilfish")
+        fetch("https://pokeapi.co/api/v2/pokemon/" + id),
+        fetch("https://pokeapi.co/api/v2/pokemon-species/" + id)
       ]);
       if (!pokemonRes.ok || !speciesRes.ok) throw new Error("PokeAPI request failed");
       var pokemon = await pokemonRes.json();
       var species = await speciesRes.json();
+      if (requestId !== featuredRequest) return;
+
+      var displayName = titleCase(pokemon.name);
+      var englishName = species.names && species.names.find(function (n) { return n.language.name === "en"; });
+      if (englishName) displayName = englishName.name;
+
+      var spriteEl = document.getElementById("dexSprite");
+      spriteEl.src = spriteUrl(pokemon.id);
+      spriteEl.alt = displayName + " sprite";
+      spriteEl.hidden = false;
+      document.getElementById("keepDiving").href = "https://pokeapi.co/api/v2/pokemon/" + pokemon.id;
 
       document.getElementById("dexNumber").textContent = "#" + String(pokemon.id).padStart(3, "0");
-      document.getElementById("dexName").textContent = titleCase(pokemon.name);
+      document.getElementById("dexName").textContent = displayName;
 
       var typesEl = document.getElementById("dexTypes");
       typesEl.innerHTML = "";
@@ -147,12 +171,20 @@
 
       card.removeAttribute("aria-busy");
     } catch (err) {
+      if (requestId !== featuredRequest) return;
       document.getElementById("dexFlavor").textContent =
         "Couldn't reach the Pokédex right now. Check your connection and reload.";
       card.removeAttribute("aria-busy");
-      console.error("Qwillion: failed to load Qwilfish data", err);
+      console.error("Qwillion: failed to load featured Pokémon #" + id, err);
     }
   }
 
-  loadQwilfish();
+  // Quiz UIs call this after a correct guess; wrong guesses never reach it.
+  window.QwillionFeatured = { show: loadFeatured };
+
+  var allPokemon = (window.QWILLION_POKEMON_STATS && window.QWILLION_POKEMON_STATS.pokemon) || [];
+  var startId = allPokemon.length
+    ? allPokemon[Math.floor(Math.random() * allPokemon.length)].id
+    : 211; // Qwilfish, if the dataset failed to load
+  loadFeatured(startId);
 })();

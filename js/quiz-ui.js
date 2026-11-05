@@ -60,6 +60,7 @@
     var resultEl = feedbackEl.firstElementChild;
     window.QwillionCatchAnim.play(resultEl.querySelector(".catch-stage"), true, function () {
       resultEl.classList.add("is-revealed");
+      if (window.QwillionFeatured) window.QwillionFeatured.show(result.pokemon.id);
     });
   }
 

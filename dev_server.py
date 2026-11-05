@@ -27,6 +27,7 @@ import json
 import os
 import re
 import secrets
+import socket
 import sys
 from pathlib import Path
 
@@ -179,8 +180,28 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         return self._json(200, {"ok": True})
 
 
+def port_in_use(port):
+    """True if anything already answers on this port over IPv4 or IPv6.
+    Windows lets two servers share a port across the two (e.g. an old
+    `python -m http.server` on [::] plus this one on 127.0.0.1), and then
+    http://localhost goes to the wrong one."""
+    for family, addr in ((socket.AF_INET, "127.0.0.1"), (socket.AF_INET6, "::1")):
+        try:
+            with socket.socket(family, socket.SOCK_STREAM) as s:
+                s.settimeout(0.3)
+                if s.connect_ex((addr, port)) == 0:
+                    return True
+        except OSError:
+            pass
+    return False
+
+
 def main():
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8123
+    if port_in_use(port):
+        print("Port %d is already in use by another server. Stop it, or pick another port:" % port)
+        print("  python dev_server.py %d" % (port + 2))
+        sys.exit(1)
     server = http.server.ThreadingHTTPServer(("127.0.0.1", port), Handler)
     print("Qwillion dev server on http://127.0.0.1:%d" % port)
     try:

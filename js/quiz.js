@@ -11,6 +11,42 @@
   };
   var STAT_KEYS = Object.keys(STAT_LABELS);
 
+  // Where each Pokemon originated, by National Dex number (the last dex
+  // number of each region's generation). Regional forms (Alolan Rattata,
+  // Hisuian Growlithe, ...) originated in their form's region instead.
+  var REGION_DEX_RANGES = [
+    { key: "kanto", name: "Kanto", lastId: 151 },
+    { key: "johto", name: "Johto", lastId: 251 },
+    { key: "hoenn", name: "Hoenn", lastId: 386 },
+    { key: "sinnoh", name: "Sinnoh", lastId: 493 },
+    { key: "unova", name: "Unova", lastId: 649 },
+    { key: "kalos", name: "Kalos", lastId: 721 },
+    { key: "alola", name: "Alola", lastId: 809 },
+    { key: "galar", name: "Galar", lastId: 898 },
+    { key: "hisui", name: "Hisui", lastId: 905 },
+    { key: "paldea", name: "Paldea", lastId: 1025 }
+  ];
+  // Meltan and Melmetal are Gen 7 Pokemon but were first found in Kanto
+  // (Let's Go), so either answer counts.
+  var EXTRA_ORIGINS = { 808: ["kanto"], 809: ["kanto"] };
+
+  function regionName(key) {
+    for (var i = 0; i < REGION_DEX_RANGES.length; i++) {
+      if (REGION_DEX_RANGES[i].key === key) return REGION_DEX_RANGES[i].name;
+    }
+    return key;
+  }
+
+  // Region keys this Pokemon counts as originating in (usually just one).
+  function originsOf(p) {
+    if (p.region) return [p.region];
+    var origins = [];
+    for (var i = 0; i < REGION_DEX_RANGES.length; i++) {
+      if (p.id <= REGION_DEX_RANGES[i].lastId) { origins.push(REGION_DEX_RANGES[i].key); break; }
+    }
+    return origins.concat(EXTRA_ORIGINS[p.id] || []);
+  }
+
   var ORDINAL_WORDS = ["", "first", "second", "third", "fourth", "fifth", "sixth"];
 
   // Regional-form entries (region + baseName set in the data) accept their
@@ -30,7 +66,8 @@
   // (any Pokemon containing that type, mono or dual) covers that simpler,
   // more common case instead.
   var QUESTION_KIND_WEIGHTS = [
-    { kind: "stat", weight: 0.35 },
+    { kind: "stat", weight: 0.20 },
+    { kind: "region", weight: 0.18 },
     { kind: "type-has", weight: 0.20 },
     { kind: "type-exact", weight: 0.15 },
     { kind: "stage", weight: 0.20 },
@@ -401,6 +438,23 @@
     };
   };
 
+  QwillionQuiz.prototype._regionQuestion = function () {
+    var region = REGION_DEX_RANGES[randInt(REGION_DEX_RANGES.length)];
+    var name = region.name;
+    function matchesRegion(p) { return originsOf(p).indexOf(region.key) !== -1; }
+
+    return {
+      text: "Name a Pokémon that originated in the " + name + " region.",
+      poolIds: this._idsWhere(matchesRegion),
+      checker: matchesRegion,
+      detail: function () { return "From " + name; },
+      wrongMessage: function (p) {
+        return p.name + " originated in " + originsOf(p).map(regionName).join("/") +
+          " — not " + name + ". Try again.";
+      }
+    };
+  };
+
   QwillionQuiz.prototype._hasMegaQuestion = function () {
     function matchesHasMega(p) { return p.hasMegaEvolution === true; }
 
@@ -423,6 +477,7 @@
     else if (kind === "type-has") generated = this._typeHasQuestion();
     else if (kind === "stage") generated = this._stageQuestion();
     else if (kind === "has-mega") generated = this._hasMegaQuestion();
+    else if (kind === "region") generated = this._regionQuestion();
     else generated = this._noEvolveQuestion();
     generated.kind = kind;
     return generated;

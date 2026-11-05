@@ -4,6 +4,7 @@
   var RUN_LENGTH = 6;
   var REVEAL_STAGGER_MS = 900;
   var REVEAL_SHAKE_MS = 450;
+  var BALL_POKE = "assets/balls/poke-ball.png";
 
   var card = document.getElementById("runQuizCard");
   var progressEl = document.getElementById("runProgress");
@@ -32,16 +33,29 @@
     inputEl.focus();
   }
 
-  function renderWrong(message) {
+  function renderUnknown(guess) {
     feedbackEl.setAttribute("data-state", "wrong");
-    feedbackEl.innerHTML = '<p class="feedback-message">' + message + "</p>";
+    feedbackEl.innerHTML = '<p class="feedback-message">Never heard of “' + guess + '” — try another Pokémon.</p>';
+  }
+
+  function renderMiss(result) {
+    feedbackEl.setAttribute("data-state", "wrong");
+    feedbackEl.innerHTML =
+      '<div class="catch-result catch-result-miss">' +
+        window.QwillionCatchAnim.stageMarkup(result.spriteUrl, result.pokemon.name, BALL_POKE) +
+        '<div class="catch-info"><p class="feedback-message">' + result.message + "</p></div>" +
+      "</div>";
+    var resultEl = feedbackEl.firstElementChild;
+    window.QwillionCatchAnim.play(resultEl.querySelector(".catch-stage"), false, function () {
+      resultEl.classList.add("is-revealed");
+    });
   }
 
   function renderCaught(caught, isLastQuestion) {
     feedbackEl.setAttribute("data-state", "correct");
     feedbackEl.innerHTML =
       '<div class="catch-result">' +
-        '<img class="catch-sprite" src="' + caught.spriteUrl + '" alt="' + caught.pokemon.name + '" />' +
+        window.QwillionCatchAnim.stageMarkup(caught.spriteUrl, caught.pokemon.name, caught.tierSprite) +
         '<div class="catch-info">' +
           '<p class="catch-name">' + caught.pokemon.name + '</p>' +
           '<p class="catch-stat">' + caught.detail + "</p>" +
@@ -55,9 +69,16 @@
         "</div>" +
       "</div>";
     inputEl.disabled = true;
-    continueBtn.hidden = false;
-    continueBtn.textContent = isLastQuestion ? "See my team →" : "Continue →";
-    awaitingContinue = true;
+    continueBtn.hidden = true;
+    awaitingContinue = false;
+
+    var resultEl = feedbackEl.firstElementChild;
+    window.QwillionCatchAnim.play(resultEl.querySelector(".catch-stage"), true, function () {
+      resultEl.classList.add("is-revealed");
+      continueBtn.hidden = false;
+      continueBtn.textContent = isLastQuestion ? "See my team →" : "Continue →";
+      awaitingContinue = true;
+    });
   }
 
   formEl.addEventListener("submit", function (e) {
@@ -73,9 +94,9 @@
     }
 
     if (result.reason === "unknown") {
-      renderWrong("Never heard of “" + result.guess + "” — try another Pokémon.");
+      renderUnknown(result.guess);
     } else if (result.reason === "wrong" || result.reason === "used") {
-      renderWrong(result.message);
+      renderMiss(result);
     }
   });
 

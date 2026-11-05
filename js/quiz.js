@@ -102,7 +102,11 @@
   }
 
   function spriteUrl(id) {
-    return "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/" + id + ".png";
+    // jsDelivr's mirror of the same PokeAPI/sprites repo - raw.githubusercontent.com
+    // is commonly blocked by firewalls/antivirus/ad-blockers (it's a frequent
+    // malware-hosting flag target), which silently breaks every sprite <img>
+    // with no visible error. jsDelivr is the CDN PokeAPI itself recommends.
+    return "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/" + id + ".png";
   }
 
   function tierDefByKey(key) {
@@ -453,7 +457,13 @@
       return { ok: false, reason: "unknown", guess: rawName };
     }
     if (!state.checker(pokemon)) {
-      return { ok: false, reason: "wrong", message: state.wrongMessage(pokemon) };
+      return {
+        ok: false,
+        reason: "wrong",
+        message: state.wrongMessage(pokemon),
+        pokemon: pokemon,
+        spriteUrl: spriteUrl(pokemon.id)
+      };
     }
     return { ok: true, pokemon: pokemon, state: state };
   };
@@ -526,6 +536,8 @@
       return {
         ok: false,
         reason: "used",
+        pokemon: pokemon,
+        spriteUrl: spriteUrl(pokemon.id),
         message: pokemon.name + " is already on your team this run — try a different Pokémon."
       };
     }

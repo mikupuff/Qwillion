@@ -9,6 +9,7 @@
   var nextBtn = document.getElementById("devQuizNext");
 
   var quiz = null;
+  var BALL_POKE = "assets/balls/poke-ball.png";
 
   function renderQuestion() {
     var q = quiz.nextQuestion();
@@ -20,16 +21,29 @@
     inputEl.focus();
   }
 
-  function renderWrong(message) {
+  function renderUnknown(guess) {
     feedbackEl.setAttribute("data-state", "wrong");
-    feedbackEl.innerHTML = '<p class="feedback-message">' + message + "</p>";
+    feedbackEl.innerHTML = '<p class="feedback-message">Never heard of “' + guess + '” — try another Pokémon.</p>';
+  }
+
+  function renderMiss(result) {
+    feedbackEl.setAttribute("data-state", "wrong");
+    feedbackEl.innerHTML =
+      '<div class="catch-result catch-result-miss">' +
+        window.QwillionCatchAnim.stageMarkup(result.spriteUrl, result.pokemon.name, BALL_POKE) +
+        '<div class="catch-info"><p class="feedback-message">' + result.message + "</p></div>" +
+      "</div>";
+    var resultEl = feedbackEl.firstElementChild;
+    window.QwillionCatchAnim.play(resultEl.querySelector(".catch-stage"), false, function () {
+      resultEl.classList.add("is-revealed");
+    });
   }
 
   function renderCorrect(result) {
     feedbackEl.setAttribute("data-state", "correct");
     feedbackEl.innerHTML =
       '<div class="catch-result">' +
-        '<img class="catch-sprite" src="' + result.spriteUrl + '" alt="' + result.pokemon.name + '" />' +
+        window.QwillionCatchAnim.stageMarkup(result.spriteUrl, result.pokemon.name, result.tierSprite) +
         '<div class="catch-info">' +
           '<p class="catch-name">' + result.pokemon.name + '</p>' +
           '<p class="catch-stat">' + result.detail + "</p>" +
@@ -43,6 +57,10 @@
         "</div>" +
       "</div>";
     inputEl.disabled = true;
+    var resultEl = feedbackEl.firstElementChild;
+    window.QwillionCatchAnim.play(resultEl.querySelector(".catch-stage"), true, function () {
+      resultEl.classList.add("is-revealed");
+    });
   }
 
   formEl.addEventListener("submit", function (e) {
@@ -58,9 +76,9 @@
     }
 
     if (result.reason === "unknown") {
-      renderWrong("Never heard of “" + result.guess + "” — try another Pokémon.");
+      renderUnknown(result.guess);
     } else if (result.reason === "wrong") {
-      renderWrong(result.message);
+      renderMiss(result);
     }
   });
 

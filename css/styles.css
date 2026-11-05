@@ -227,11 +227,94 @@ hr.rule {
   border-top: 1px dashed var(--hairline);
   padding-top: 16px;
 }
-.catch-sprite {
+.catch-stage {
+  position: relative;
   flex: none;
   width: 72px;
   height: 72px;
+}
+.catch-stage .catch-sprite,
+.catch-stage .catch-ball {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
+}
+.catch-stage .catch-ball {
+  opacity: 0;
+}
+/* Caught (1.6s): the ball is thrown in small, HITS the Pokemon (~0.5s),
+   bounces back up off it, the Pokemon is pulled into the ball while it
+   hangs at the top of the bounce, then the ball drops into the Pokemon's
+   spot at full size and wobbles shut. Missed (0.82s): same kind of throw,
+   but the ball deflects away and the Pokemon flinches. Durations must stay
+   in step with CATCH_MS / MISS_MS in js/catch-anim.js. */
+.catch-stage.is-caught .catch-ball {
+  opacity: 1;
+  animation: catch-ball-hit-bounce-catch 1.6s linear forwards;
+}
+.catch-stage.is-missed .catch-ball {
+  opacity: 1;
+  animation: catch-ball-throw-miss 0.82s ease-in forwards;
+}
+/* The Pokemon takes the hit (a quick jolt at ~0.5s), then flashes bright
+   and shrinks up into the ball at the top of its bounce (-22px, -46px). */
+.catch-stage.is-caught .catch-sprite {
+  animation:
+    catch-sprite-hit 0.14s ease-out 0.5s,
+    catch-sprite-absorb 0.34s ease-in 0.66s forwards;
+}
+.catch-stage.is-missed .catch-sprite { animation: catch-sprite-flinch 0.26s ease-in-out 0.56s; }
+
+.catch-info {
+  opacity: 0;
+  transition: opacity 0.3s ease-out;
+}
+.catch-result.is-revealed .catch-info { opacity: 1; }
+
+/* Percentages of 1.6s. 0-31%: thrown in from the left, spinning, and
+   strikes the Pokemon (~0.5s). 31-44%: bounces back up and away. 44-58%:
+   hangs at the top of the bounce while the Pokemon is pulled in. 58-74%:
+   drops into the Pokemon's spot, growing to full size. 74-100%: a small
+   landing bounce, then wobbles shut. */
+@keyframes catch-ball-hit-bounce-catch {
+  0%   { transform: translate(-150px, 6px) scale(0.42) rotate(-320deg); animation-timing-function: ease-out; }
+  18%  { transform: translate(-70px, -24px) scale(0.48) rotate(-150deg); animation-timing-function: ease-in; }
+  31%  { transform: translate(-8px, -4px) scale(0.5) rotate(0deg); animation-timing-function: ease-out; }
+  44%  { transform: translate(-22px, -46px) scale(0.55) rotate(-60deg); animation-timing-function: ease-in-out; }
+  58%  { transform: translate(-22px, -48px) scale(0.6) rotate(-20deg); animation-timing-function: ease-in; }
+  74%  { transform: translate(0, 0) scale(1) rotate(0deg); animation-timing-function: ease-out; }
+  80%  { transform: translate(0, -7px) scale(1) rotate(0deg); animation-timing-function: ease-in; }
+  85%  { transform: translate(0, 0) scale(1) rotate(0deg); }
+  90%  { transform: translate(0, 0) scale(1) rotate(-14deg); }
+  95%  { transform: translate(0, 0) scale(1) rotate(9deg); }
+  100% { transform: translate(0, 0) scale(1) rotate(0deg); }
+}
+@keyframes catch-sprite-hit {
+  0%   { transform: translate(0, 0); }
+  35%  { transform: translate(7px, 2px) rotate(6deg); }
+  100% { transform: translate(0, 0); }
+}
+@keyframes catch-sprite-absorb {
+  0%   { transform: translate(0, 0) scale(1); filter: brightness(1); opacity: 1; }
+  30%  { transform: translate(-3px, -6px) scale(0.9); filter: brightness(2.6) saturate(0.3); opacity: 1; }
+  100% { transform: translate(-22px, -46px) scale(0); filter: brightness(3) saturate(0); opacity: 0; }
+}
+/* Same throw and impact as the catch, but the ball can't close - it
+   deflects up and away, spinning, and falls off as it fades. */
+@keyframes catch-ball-throw-miss {
+  0%   { transform: translate(-150px, 8px) scale(0.55) rotate(-65deg); opacity: 1; }
+  48%  { transform: translate(-58px, -24px) scale(0.8) rotate(-15deg); }
+  68%  { transform: translate(0, 0) scale(1.12) rotate(8deg); }
+  82%  { transform: translate(30px, -22px) scale(0.85) rotate(90deg); }
+  100% { transform: translate(58px, 42px) scale(0.5) rotate(230deg); opacity: 0; }
+}
+@keyframes catch-sprite-flinch {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  55% { transform: translateX(5px); }
+  80% { transform: translateX(-3px); }
 }
 .catch-name {
   color: var(--color-foam);
@@ -269,6 +352,7 @@ hr.rule {
   flex: none;
 }
 
+.quiz-next[hidden] { display: none; }
 .quiz-next {
   display: block;
   margin-top: 20px;
@@ -493,6 +577,14 @@ hr.rule {
 @media (prefers-reduced-motion: reduce), body[data-reduce-motion="true"] {
   .team-slot.shaking .team-ball { animation: none; }
   .team-ball, .team-pokemon, .team-slot-name, .team-slot-tier { transition: none; }
+  .catch-stage .catch-ball,
+  .catch-info { transition: none; }
+  .catch-stage.is-caught .catch-ball,
+  .catch-stage.is-caught .catch-sprite,
+  .catch-stage.is-missed .catch-ball,
+  .catch-stage.is-missed .catch-sprite { animation: none; }
+  .catch-stage.is-caught .catch-sprite { opacity: 0; }
+  .catch-stage.is-missed .catch-ball { opacity: 0; }
 }
 
 .keep-diving {

@@ -309,13 +309,66 @@
     clearRevealTimers();
     teamReveal.hidden = true;
     card.hidden = false;
-    startNewRun();
+    // Today's daily is played once per load; after that it's random dives.
+    setModeLine(null);
+    startNewRun(null);
   });
 
-  function startNewRun() {
+  // specs: today's daily game questions, or null for a random dive.
+  function startNewRun(specs) {
     resetTeamRail();
-    var q = quiz.startRun(RUN_LENGTH);
+    var q = quiz.startRun(RUN_LENGTH, specs || undefined);
     renderQuestion(q);
+  }
+
+  function localDateString(d) {
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+
+  function setModeLine(daily) {
+    var el = document.getElementById("diveSub");
+    if (!el) return;
+    if (!daily) el.textContent = "Random dive. Catch six Pokémon to build a team. No repeats.";
+    else if (daily.isToday) el.textContent = "Today's daily dive (" + daily.date + "). Catch six Pokémon to build your team. No repeats.";
+    else el.textContent = "Latest daily dive (" + daily.date + "). Catch six Pokémon to build your team. No repeats.";
+  }
+
+  // Loads one published daily (data/daily/<date>.json). Resolves to null if
+  // it's missing or invalid.
+  function fetchDaily(date) {
+    return fetch("data/daily/" + date + ".json", { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (game) {
+        if (!game || !Array.isArray(game.questions) || game.questions.length !== RUN_LENGTH) return null;
+        game.questions.forEach(function (spec) { quiz.buildQuestion(spec); }); // throws if invalid
+        return { date: date, questions: game.questions };
+      })
+      .catch(function (err) {
+        console.warn("Qwillion: daily for " + date + " is unusable.", err);
+        return null;
+      });
+  }
+
+  // The game the site opens with: today's published daily (player's local
+  // date). If today has none, the most recent daily published before today,
+  // from data/daily/index.json. Only if nothing is published is it random.
+  function fetchOpeningDaily() {
+    var today = localDateString(new Date());
+    return fetchDaily(today).then(function (daily) {
+      if (daily) { daily.isToday = true; return daily; }
+      return fetch("data/daily/index.json", { cache: "no-store" })
+        .then(function (r) { return r.ok ? r.json() : { dates: [] }; })
+        .catch(function () { return { dates: [] }; })
+        .then(function (index) {
+          var past = (index.dates || []).filter(function (d) { return d < today; }).sort().reverse();
+          // Walk back past any broken files to the newest usable one.
+          function tryNext(i) {
+            if (i >= past.length) return null;
+            return fetchDaily(past[i]).then(function (d) { return d || tryNext(i + 1); });
+          }
+          return tryNext(0);
+        });
+    });
   }
 
   function loadQuiz() {
@@ -327,10 +380,13 @@
       if (!stats || !survey || !bulbapedia || !googletrends) throw new Error("quiz data scripts not loaded");
 
       quiz = new window.QwillionQuiz({ stats: stats, survey: survey, bulbapedia: bulbapedia, googletrends: googletrends });
-      card.removeAttribute("aria-busy");
       buildBallKey();
       preloadBadges();
-      startNewRun();
+      fetchOpeningDaily().then(function (daily) {
+        card.removeAttribute("aria-busy");
+        setModeLine(daily);
+        startNewRun(daily && daily.questions);
+      });
     } catch (err) {
       questionEl.textContent = "Couldn't load the quiz data. Try reloading the page.";
       card.removeAttribute("aria-busy");

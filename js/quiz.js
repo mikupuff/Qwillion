@@ -65,6 +65,17 @@
   // otherwise buries monotype questions under dual-type ones; "has X type"
   // (any Pokemon containing that type, mono or dual) covers that simpler,
   // more common case instead.
+  // Question structures, as offered in the dev-mode daily builder.
+  var QUESTION_KINDS = [
+    { kind: "stat", label: "Stat higher/lower than" },
+    { kind: "region", label: "Originated in region" },
+    { kind: "type-has", label: "Has type" },
+    { kind: "type-exact", label: "Is exactly type(s)" },
+    { kind: "stage", label: "Evolution stage" },
+    { kind: "no-evolve", label: "Does not evolve" },
+    { kind: "has-mega", label: "Has a Mega Evolution" }
+  ];
+
   var QUESTION_KIND_WEIGHTS = [
     { kind: "stat", weight: 0.20 },
     { kind: "region", weight: 0.18 },
@@ -299,48 +310,46 @@
     return ids;
   };
 
-  QwillionQuiz.prototype._statQuestion = function () {
-    var statKey, tiers, x, direction, poolIds;
-    var attempts = 0;
-    do {
-      statKey = STAT_KEYS[randInt(STAT_KEYS.length)];
-      tiers = this._tiersForStat(statKey);
-      x = tiers[randInt(tiers.length)];
-      direction = Math.random() < 0.5 ? "higher" : "lower";
-      poolIds = this._idsWhere(matchesStat);
-      attempts++;
-    } while (poolIds.length === 0 && attempts < 20);
+  // --- Question specs ---
+  // Every question is fully described by a plain, JSON-safe spec:
+  //   { kind: "stat", stat: "speed", direction: "higher", value: 96 }
+  //   { kind: "region", region: "johto" }
+  //   { kind: "type-has", type: "fire" }
+  //   { kind: "type-exact", types: ["water"] }  or  ["bug", "steel"]
+  //   { kind: "stage", stage: 2 }
+  //   { kind: "no-evolve" }, { kind: "has-mega" }
+  // Random questions pick a spec first and then build from it, so a daily
+  // game (a list of six hand-picked specs) runs through exactly the same
+  // code as a random run.
 
-    var statLabel = STAT_LABELS[statKey];
-
-    function matchesStat(p) {
-      var v = p.stats[statKey];
-      return direction === "higher" ? v > x : v < x;
+  QwillionQuiz.prototype._randomSpec = function (kind) {
+    kind = kind || pickWeightedKind();
+    if (kind === "stat") {
+      var spec, attempts = 0;
+      do {
+        var statKey = STAT_KEYS[randInt(STAT_KEYS.length)];
+        var tiers = this._tiersForStat(statKey);
+        spec = {
+          kind: "stat",
+          stat: statKey,
+          direction: Math.random() < 0.5 ? "higher" : "lower",
+          value: tiers[randInt(tiers.length)]
+        };
+        attempts++;
+      } while (this._statQuestion(spec).poolIds.length === 0 && attempts < 20);
+      return spec;
     }
-
-    return {
-      text: "Name a Pokémon with " + direction + " than " + x + " " + statLabel + ".",
-      poolIds: poolIds,
-      checker: matchesStat,
-      detail: function (p) { return statLabel + ": " + p.stats[statKey]; },
-      wrongMessage: function (p) {
-        return p.name + "'s " + statLabel + " is " + p.stats[statKey] +
-          " — not " + direction + " than " + x + ". Try again.";
-      }
-    };
+    if (kind === "type-exact") return { kind: kind, types: this._randomExactTypes() };
+    if (kind === "type-has") return { kind: kind, type: this.allTypes[randInt(this.allTypes.length)] };
+    if (kind === "stage") return { kind: kind, stage: this.stageNumbers[randInt(this.stageNumbers.length)] };
+    if (kind === "region") return { kind: kind, region: REGION_DEX_RANGES[randInt(REGION_DEX_RANGES.length)].key };
+    if (kind === "has-mega") return { kind: kind };
+    return { kind: "no-evolve" };
   };
 
-  QwillionQuiz.prototype._dualPartnersOf = function (x) {
-    var self = this;
-    return this.allTypes.filter(function (t) {
-      return t !== x && self.dualPairSet.has([x, t].sort().join("|"));
-    });
-  };
-
-  // Exact type-match question: "is X/Y type" (or monotype "is X type"). When
-  // a type has both a monotype Pokemon and dual-type partners, it's a fair
-  // coin flip between the two - otherwise it's whichever actually exists.
-  QwillionQuiz.prototype._typeExactQuestion = function () {
+  // When a type has both a monotype Pokemon and dual-type partners, it's a
+  // fair coin flip between the two - otherwise it's whichever actually exists.
+  QwillionQuiz.prototype._randomExactTypes = function () {
     var x, y, dualPartners;
     var attempts = 0;
     do {
@@ -358,6 +367,79 @@
       }
       attempts++;
     } while (y === undefined && attempts < 20);
+    return y ? [x, y] : [x];
+  };
+
+  // Builds a question from a spec. Throws on a spec it can't make sense of,
+  // so a bad daily file fails loudly instead of asking a broken question.
+  QwillionQuiz.prototype.buildQuestion = function (spec) {
+    if (!spec || typeof spec !== "object") throw new Error("Question spec missing");
+    var generated;
+    switch (spec.kind) {
+      case "stat":
+        if (!STAT_LABELS[spec.stat]) throw new Error("Unknown stat: " + spec.stat);
+        if (spec.direction !== "higher" && spec.direction !== "lower") throw new Error("Bad stat direction: " + spec.direction);
+        if (typeof spec.value !== "number" || !isFinite(spec.value)) throw new Error("Bad stat value: " + spec.value);
+        generated = this._statQuestion(spec); break;
+      case "type-exact":
+        if (!Array.isArray(spec.types) || spec.types.length < 1 || spec.types.length > 2 ||
+            !spec.types.every(function (t) { return this.allTypes.indexOf(t) !== -1; }, this) ||
+            (spec.types.length === 2 && spec.types[0] === spec.types[1])) {
+          throw new Error("Bad exact types: " + JSON.stringify(spec.types));
+        }
+        generated = this._typeExactQuestion(spec); break;
+      case "type-has":
+        if (this.allTypes.indexOf(spec.type) === -1) throw new Error("Unknown type: " + spec.type);
+        generated = this._typeHasQuestion(spec); break;
+      case "stage":
+        if (this.stageNumbers.indexOf(spec.stage) === -1) throw new Error("Unknown stage: " + spec.stage);
+        generated = this._stageQuestion(spec); break;
+      case "region":
+        if (!REGION_DEX_RANGES.some(function (r) { return r.key === spec.region; })) throw new Error("Unknown region: " + spec.region);
+        generated = this._regionQuestion(spec); break;
+      case "has-mega": generated = this._hasMegaQuestion(); break;
+      case "no-evolve": generated = this._noEvolveQuestion(); break;
+      default: throw new Error("Unknown question kind: " + spec.kind);
+    }
+    generated.kind = spec.kind;
+    generated.spec = spec;
+    return generated;
+  };
+
+  QwillionQuiz.prototype._statQuestion = function (spec) {
+    var statKey = spec.stat;
+    var x = spec.value;
+    var direction = spec.direction;
+    var statLabel = STAT_LABELS[statKey];
+
+    function matchesStat(p) {
+      var v = p.stats[statKey];
+      return direction === "higher" ? v > x : v < x;
+    }
+
+    return {
+      text: "Name a Pokémon with " + direction + " than " + x + " " + statLabel + ".",
+      poolIds: this._idsWhere(matchesStat),
+      checker: matchesStat,
+      detail: function (p) { return statLabel + ": " + p.stats[statKey]; },
+      wrongMessage: function (p) {
+        return p.name + "'s " + statLabel + " is " + p.stats[statKey] +
+          " — not " + direction + " than " + x + ". Try again.";
+      }
+    };
+  };
+
+  QwillionQuiz.prototype._dualPartnersOf = function (x) {
+    var self = this;
+    return this.allTypes.filter(function (t) {
+      return t !== x && self.dualPairSet.has([x, t].sort().join("|"));
+    });
+  };
+
+  // Exact type-match question: "is X/Y type" (or monotype "is X type").
+  QwillionQuiz.prototype._typeExactQuestion = function (spec) {
+    var x = spec.types[0];
+    var y = spec.types.length > 1 ? spec.types[1] : null;
 
     var targetSet = y === null ? new Set([x]) : new Set([x, y]);
     // Single-type questions read "mono-Psychic type", so it's clear a
@@ -386,8 +468,8 @@
 
   // Looser type question: "has X type" - any Pokemon carrying that type,
   // whether it's their only type or one of two.
-  QwillionQuiz.prototype._typeHasQuestion = function () {
-    var x = this.allTypes[randInt(this.allTypes.length)];
+  QwillionQuiz.prototype._typeHasQuestion = function (spec) {
+    var x = spec.type;
     var label = titleCase(x) + " type";
 
     function matchesHas(p) { return p.types.indexOf(x) !== -1; }
@@ -404,8 +486,8 @@
     };
   };
 
-  QwillionQuiz.prototype._stageQuestion = function () {
-    var stageNumber = this.stageNumbers[randInt(this.stageNumbers.length)];
+  QwillionQuiz.prototype._stageQuestion = function (spec) {
+    var stageNumber = spec.stage;
     var ordinal = ordinalWord(stageNumber);
 
     function matchesStage(p) { return p.stage === stageNumber; }
@@ -438,8 +520,8 @@
     };
   };
 
-  QwillionQuiz.prototype._regionQuestion = function () {
-    var region = REGION_DEX_RANGES[randInt(REGION_DEX_RANGES.length)];
+  QwillionQuiz.prototype._regionQuestion = function (spec) {
+    var region = REGION_DEX_RANGES.filter(function (r) { return r.key === spec.region; })[0];
     var name = region.name;
     function matchesRegion(p) { return originsOf(p).indexOf(region.key) !== -1; }
 
@@ -470,17 +552,48 @@
   };
 
   QwillionQuiz.prototype._generateWithKind = function () {
-    var kind = pickWeightedKind();
-    var generated;
-    if (kind === "stat") generated = this._statQuestion();
-    else if (kind === "type-exact") generated = this._typeExactQuestion();
-    else if (kind === "type-has") generated = this._typeHasQuestion();
-    else if (kind === "stage") generated = this._stageQuestion();
-    else if (kind === "has-mega") generated = this._hasMegaQuestion();
-    else if (kind === "region") generated = this._regionQuestion();
-    else generated = this._noEvolveQuestion();
-    generated.kind = kind;
-    return generated;
+    return this.buildQuestion(this._randomSpec());
+  };
+
+  // --- Daily builder helpers (dev mode) ---
+
+  // Everything the builder needs to offer valid choices for each kind.
+  QwillionQuiz.prototype.questionOptions = function () {
+    var self = this;
+    return {
+      kinds: QUESTION_KINDS,
+      stats: STAT_KEYS.map(function (key) {
+        var s = self.statSummary[key];
+        return { key: key, label: STAT_LABELS[key], suggested: self._tiersForStat(key).slice().sort(function (a, b) { return a - b; }), min: s.min, max: s.max };
+      }),
+      regions: REGION_DEX_RANGES.map(function (r) { return { key: r.key, label: r.name }; }),
+      types: this.allTypes.map(function (t) { return { key: t, label: titleCase(t), hasMonotype: self.monotypeSet.has(t) }; }),
+      stages: this.stageNumbers.map(function (n) { return { key: n, label: titleCase(ordinalWord(n)) + " stage" }; })
+    };
+  };
+
+  QwillionQuiz.prototype.dualPartnersOf = function (type) {
+    return this._dualPartnersOf(type);
+  };
+
+  QwillionQuiz.prototype.randomSpec = function (kind) {
+    return this._randomSpec(kind);
+  };
+
+  // Preview of a spec for the builder: the question text, how many answers
+  // it has, how those split across ball tiers, and sample answers from the
+  // common and rare ends.
+  QwillionQuiz.prototype.previewQuestion = function (spec) {
+    var state = this._toQuestionState(this.buildQuestion(spec));
+    var byTier = {};
+    TIER_DEFS.forEach(function (t) { byTier[t.key] = []; });
+    var popularity = this.popularity;
+    var byId = this.byId;
+    state.poolIds
+      .slice()
+      .sort(function (a, b) { return popularity.get(a) - popularity.get(b); }) // most popular first
+      .forEach(function (id) { byTier[state.tierByPokemonId.get(id).key].push(byId.get(id).name); });
+    return { text: state.text, poolSize: state.poolSize, poolIds: state.poolIds, byTier: byTier };
   };
 
   QwillionQuiz.prototype._toQuestionState = function (generated) {
@@ -552,11 +665,18 @@
   // --- Run mode: a fixed-length quiz (e.g. 6 questions) where no Pokemon
   // can be used as an answer more than once across the whole run. ---
 
-  QwillionQuiz.prototype.startRun = function (length) {
+  // specs (optional): a fixed list of question specs, e.g. today's daily
+  // game. Without it, each question is picked at random.
+  QwillionQuiz.prototype.startRun = function (length, specs) {
+    if (specs) length = specs.length;
     length = length || 6;
     var usedIds = new Set();
     var questions = [];
     for (var i = 0; i < length; i++) {
+      if (specs) {
+        questions.push(this._toQuestionState(this.buildQuestion(specs[i])));
+        continue;
+      }
       var attempts = 0;
       var generated;
       do {

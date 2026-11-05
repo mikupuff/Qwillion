@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="css/styles.css?v=12" />
+<link rel="stylesheet" href="css/styles.css?v=13" />
 </head>
 <body>
 
@@ -36,7 +36,7 @@
 
     <div id="mainView">
       <h2 class="dive-heading">Dive in</h2>
-      <p class="dive-sub">Catch six Pok&eacute;mon to build today's team. No repeats.</p>
+      <p class="dive-sub" id="diveSub">Catch six Pok&eacute;mon to build today's team. No repeats.</p>
 
       <aside class="team-rail" id="teamRail" aria-label="Your team so far">
         <p class="team-rail-title">Your team</p>
@@ -102,6 +102,51 @@
 
     <div id="devModeView" hidden>
       <h2 class="dive-heading">Dev Mode</h2>
+
+      <form class="quiz-card dev-gate" id="devGate" autocomplete="off">
+        <p class="quiz-kicker">Locked</p>
+        <h3 class="quiz-question">Enter the dev password</h3>
+        <div class="quiz-form">
+          <input type="password" id="devPassword" class="quiz-input" placeholder="Password" aria-label="Dev password" autocomplete="current-password" />
+          <button type="submit" class="quiz-submit">Unlock</button>
+        </div>
+        <p class="dev-note" id="devGateMsg" role="status"></p>
+      </form>
+
+      <div id="devUnlocked" hidden>
+      <div class="dev-tabs" role="tablist">
+        <button type="button" role="tab" class="dev-tab" id="devTabBuilder" aria-selected="true">Daily builder</button>
+        <button type="button" role="tab" class="dev-tab" id="devTabPractice" aria-selected="false">Practice</button>
+        <button type="button" class="dev-tab dev-lock" id="devLock">Lock</button>
+      </div>
+
+      <section id="devBuilderPanel">
+        <p class="dive-sub">Pick six questions, then publish them as the daily game for a date.</p>
+
+        <div class="quiz-card dev-builder-head">
+          <label class="dev-field">
+            <span class="dev-label">Date</span>
+            <input type="date" id="dailyDate" class="quiz-input dev-input" />
+          </label>
+          <p class="dev-note" id="dailyDateNote"></p>
+          <div class="dev-scheduled" id="dailyScheduled"></div>
+        </div>
+
+        <ol class="dev-slots" id="dailySlots"></ol>
+
+        <div class="quiz-card dev-publish">
+          <ul class="dev-warnings" id="dailyWarnings"></ul>
+          <div class="dev-actions">
+            <button type="button" class="quiz-submit" id="dailyPublish">Publish daily</button>
+            <button type="button" class="quiz-next" id="dailyRandomAll">Randomize all</button>
+            <button type="button" class="quiz-next" id="dailyDownload">Download JSON</button>
+            <button type="button" class="quiz-next" id="dailyDelete" hidden>Unpublish</button>
+          </div>
+          <p class="dev-note" id="dailyStatus" role="status" aria-live="polite"></p>
+        </div>
+      </section>
+
+      <section id="devPracticePanel" hidden>
       <p class="dive-sub">Unlimited practice questions. Same engine, no team limit, repeats allowed.</p>
 
       <article class="quiz-card" id="devQuizCard" aria-busy="true">
@@ -113,12 +158,12 @@
           <button type="submit" class="quiz-submit">Dive</button>
         </form>
 
-        <div class="ball-key" id="ballKey" aria-live="polite"></div>
-
         <div class="quiz-feedback" id="devQuizFeedback" role="status" aria-live="polite"></div>
 
         <button type="button" class="quiz-next" id="devQuizNext">New question &#8635;</button>
       </article>
+      </section>
+      </div>
     </div>
   </section>
 </main>
@@ -178,10 +223,11 @@
 <script src="data/popularity-survey-2019.js"></script>
 <script src="data/popularity-bulbapedia-2026.js"></script>
 <script src="data/popularity-googletrends.js"></script>
-<script src="js/quiz.js?v=14"></script>
+<script src="js/quiz.js?v=15"></script>
 <script src="js/catch-anim.js?v=7"></script>
-<script src="js/run-quiz-ui.js?v=13"></script>
+<script src="js/run-quiz-ui.js?v=15"></script>
 <script src="js/quiz-ui.js?v=7"></script>
+<script src="js/daily-builder.js?v=2"></script>
 <script src="js/app.js?v=7"></script>
 </body>
 </html>

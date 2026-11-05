@@ -1,0 +1,36 @@
+{
+  "date": "2026-11-06",
+  "questions": [
+    {
+      "kind": "stage",
+      "stage": 3
+    },
+    {
+      "kind": "type-has",
+      "type": "fairy"
+    },
+    {
+      "kind": "stat",
+      "stat": "special-defense",
+      "direction": "higher",
+      "value": 57
+    },
+    {
+      "kind": "type-exact",
+      "types": [
+        "ground"
+      ]
+    },
+    {
+      "kind": "stat",
+      "stat": "defense",
+      "direction": "higher",
+      "value": 102
+    },
+    {
+      "kind": "region",
+      "region": "johto"
+    }
+  ],
+  "publishedAt": "2026-11-05T21:49:39.815Z"
+}

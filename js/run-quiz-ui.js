@@ -183,7 +183,7 @@
     if (!quiz || !awaitingContinue) return;
     var adv = quiz.advanceRun();
     if (adv.done) {
-      showTeamReveal(adv.team, adv.score, adv.maxScore);
+      showTeamReveal(adv.team, adv.score);
     } else {
       renderQuestion(adv);
     }
@@ -203,35 +203,89 @@
     return slot;
   }
 
-  // Counts the final score up from 0 (in chunky steps, to match the pixel
-  // look), with depth = points x 10 m, like Krillion.
-  function showScore(score, maxScore) {
+  // ---------- Badge case (end screen) ----------
+  // Eight empty slots; once the team is revealed, the points count up and
+  // each badge you earned pops into its slot one at a time.
+  var BADGE_POP_MS = 420;
+  var revealTimers = [];
+
+  function later(fn, ms) { revealTimers.push(setTimeout(fn, ms)); }
+  function clearRevealTimers() {
+    revealTimers.forEach(clearTimeout);
+    revealTimers = [];
+  }
+
+  function preloadBadges() {
+    window.QwillionQuiz.BADGES.forEach(function (b) {
+      new Image().src = b.sprite;
+      new Image().src = b.back;
+    });
+  }
+
+  function resetBadgeCase() {
+    var badges = window.QwillionQuiz.BADGES;
+    document.getElementById("badgeCase").innerHTML = badges.map(function (b) {
+      return '<li class="badge-slot" title="' + b.name + " \u2014 " + b.minScore + ' pts">' +
+        '<img src="' + b.back + '" alt="' + b.name + ' (not earned)" />' +
+      "</li>";
+    }).join("");
+    document.getElementById("teamBadgeCount").textContent = "0";
+    document.getElementById("teamScoreValue").textContent = "0";
+    document.getElementById("teamScoreDepth").textContent = "0 m deep";
+    document.getElementById("teamScoreNext").textContent = "";
+  }
+
+  function nextBadgeText(score) {
+    var next = window.QwillionQuiz.BADGES.filter(function (b) { return score < b.minScore; })[0];
+    if (!next) return "All eight badges. Champion-level dive!";
+    return (next.minScore - score) + " more pts for the " + next.name + ".";
+  }
+
+  function showScore(score) {
+    var earned = window.QwillionQuiz.badgesForScore(score);
+    var slots = document.querySelectorAll("#badgeCase .badge-slot");
     var valueEl = document.getElementById("teamScoreValue");
     var depthEl = document.getElementById("teamScoreDepth");
-    var maxEl = document.getElementById("teamScoreMax");
-    var scoreEl = document.getElementById("teamScore");
-    maxEl.textContent = "out of " + maxScore;
-    scoreEl.classList.add("is-shown");
-    function paint(v) {
+    var countEl = document.getElementById("teamBadgeCount");
+    var nextEl = document.getElementById("teamScoreNext");
+
+    function paintScore(v) {
       valueEl.textContent = v;
       depthEl.textContent = (v * 10).toLocaleString() + " m deep";
     }
+    var badges = window.QwillionQuiz.BADGES;
+    function earn(i) {
+      var img = slots[i].querySelector("img");
+      img.src = badges[i].sprite;
+      img.alt = badges[i].name;
+      slots[i].classList.add("is-earned");
+      countEl.textContent = i + 1;
+    }
+
     var reduce = document.body.getAttribute("data-reduce-motion") === "true" ||
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce || score === 0) { paint(score); return; }
-    var steps = 20, step = 0;
-    var timer = setInterval(function () {
-      step++;
-      paint(Math.round(score * step / steps));
-      if (step >= steps) clearInterval(timer);
-    }, 45);
+    if (reduce) {
+      paintScore(score);
+      for (var i = 0; i < earned; i++) earn(i);
+      nextEl.textContent = nextBadgeText(score);
+      return;
+    }
+
+    // Points count up in chunky steps while the badges pop in one by one.
+    var steps = 16;
+    for (var s = 1; s <= steps; s++) {
+      (function (s) { later(function () { paintScore(Math.round(score * s / steps)); }, s * 40); })(s);
+    }
+    for (var b = 0; b < earned; b++) {
+      (function (b) { later(function () { earn(b); }, 500 + b * BADGE_POP_MS); })(b);
+    }
+    later(function () { nextEl.textContent = nextBadgeText(score); }, 500 + earned * BADGE_POP_MS);
   }
 
-  function showTeamReveal(team, score, maxScore) {
+  function showTeamReveal(team, score) {
     card.hidden = true;
-    document.getElementById("teamScore").classList.remove("is-shown");
-    document.getElementById("teamScoreValue").textContent = "0";
-    document.getElementById("teamScoreDepth").textContent = "0 m deep";
+    clearRevealTimers();
+    resetBadgeCase();
     teamGrid.innerHTML = "";
     var slots = team.map(function (member) {
       var slot = buildTeamSlot(member);
@@ -242,16 +296,17 @@
 
     slots.forEach(function (slot, index) {
       var startAt = index * REVEAL_STAGGER_MS;
-      setTimeout(function () { slot.classList.add("shaking"); }, startAt);
-      setTimeout(function () {
+      later(function () { slot.classList.add("shaking"); }, startAt);
+      later(function () {
         slot.classList.remove("shaking");
         slot.classList.add("revealed");
       }, startAt + REVEAL_SHAKE_MS);
     });
-    setTimeout(function () { showScore(score, maxScore); }, team.length * REVEAL_STAGGER_MS + 200);
+    later(function () { showScore(score); }, team.length * REVEAL_STAGGER_MS + 200);
   }
 
   playAgainBtn.addEventListener("click", function () {
+    clearRevealTimers();
     teamReveal.hidden = true;
     card.hidden = false;
     startNewRun();
@@ -274,6 +329,7 @@
       quiz = new window.QwillionQuiz({ stats: stats, survey: survey, bulbapedia: bulbapedia, googletrends: googletrends });
       card.removeAttribute("aria-busy");
       buildBallKey();
+      preloadBadges();
       startNewRun();
     } catch (err) {
       questionEl.textContent = "Couldn't load the quiz data. Try reloading the page.";

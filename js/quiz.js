@@ -659,5 +659,29 @@
 
   // Ball tiers in rarity order (common -> rarest), for the UI's ball key.
   QwillionQuiz.TIERS = TIER_DEFS;
+
+  // Gym badges earned from a run's total points (max 600). Each step is a
+  // little bigger than the last (35 -> 80 pts), topping out at 450. Tuned
+  // against simulated runs: a typical player leaning on popular answers lands
+  // around 100 points (2 badges); picking valid answers at random lands
+  // around 185 (4); all eight needs mostly Ultra/Master Ball answers.
+  // Badge art: the Kanto badges from the Pokemon HeartGold/SoulSilver badge
+  // case, ripped by Kyo Wolf (The Spriters Resource, asset 29323). `sprite`
+  // is the badge's face; `back` is its plain back, shown dimmed in an empty
+  // slot.
+  QwillionQuiz.BADGES = [
+    { name: "Boulder Badge", sprite: "assets/badges/boulder.png", back: "assets/badges/boulder-back.png", minScore: 35 },
+    { name: "Cascade Badge", sprite: "assets/badges/cascade.png", back: "assets/badges/cascade-back.png", minScore: 70 },
+    { name: "Thunder Badge", sprite: "assets/badges/thunder.png", back: "assets/badges/thunder-back.png", minScore: 115 },
+    { name: "Rainbow Badge", sprite: "assets/badges/rainbow.png", back: "assets/badges/rainbow-back.png", minScore: 170 },
+    { name: "Soul Badge", sprite: "assets/badges/soul.png", back: "assets/badges/soul-back.png", minScore: 230 },
+    { name: "Marsh Badge", sprite: "assets/badges/marsh.png", back: "assets/badges/marsh-back.png", minScore: 295 },
+    { name: "Volcano Badge", sprite: "assets/badges/volcano.png", back: "assets/badges/volcano-back.png", minScore: 370 },
+    { name: "Earth Badge", sprite: "assets/badges/earth.png", back: "assets/badges/earth-back.png", minScore: 450 }
+  ];
+
+  QwillionQuiz.badgesForScore = function (score) {
+    return QwillionQuiz.BADGES.filter(function (b) { return score >= b.minScore; }).length;
+  };
   window.QwillionQuiz = QwillionQuiz;
 })();

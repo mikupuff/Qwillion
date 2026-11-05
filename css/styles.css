@@ -796,13 +796,11 @@ hr.rule {
 .team-slot.revealed .team-slot-points { opacity: 1; }
 
 /* Final score on the team screen: counts up after the last ball opens. */
+/* Sits under the team grid and is on screen (empty) before the first
+   Pokemon is revealed; badges pop in after the last one. */
 .team-score {
-  margin: -8px auto 24px;
-  opacity: 0;
-  transform: translateY(6px);
-  transition: opacity 0.3s steps(3, end), transform 0.3s steps(3, end);
+  margin: 4px auto 26px;
 }
-.team-score.is-shown { opacity: 1; transform: none; }
 .team-score-label {
   color: var(--color-sand);
   text-shadow: var(--text-shadow-pixel);
@@ -811,9 +809,56 @@ hr.rule {
   font-size: 13px;
   margin: 0;
 }
+/* The badge case: a dark velvet tray with eight slots (two rows of four,
+   like the in-game case). Unearned slots show a faint silhouette; earned
+   badges pop in at full color. */
+.badge-case {
+  list-style: none;
+  margin: 10px auto 14px;
+  padding: 14px;
+  max-width: 360px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  background: linear-gradient(180deg, #ffffff14 0 4px, transparent 4px), #1a0f2e;
+  box-shadow: 0 0 0 3px var(--color-abyss), 0 0 0 6px var(--color-sand), 0 0 0 9px var(--color-abyss), 7px 7px 0 6px #04101fb3;
+}
+.badge-slot {
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  background: #0e0820;
+  box-shadow: inset 0 3px 0 #00000080, 0 0 0 2px #2d1e48;
+}
+.badge-slot img {
+  width: min(78%, 66px);
+  height: min(78%, 66px);
+  object-fit: contain;
+  filter: grayscale(1) brightness(0.55);
+  opacity: 0.35;
+}
+.badge-slot.is-earned { box-shadow: inset 0 3px 0 #00000080, 0 0 0 2px var(--color-sand); }
+.badge-slot.is-earned img {
+  filter: drop-shadow(0 0 6px #f0d48899);
+  opacity: 1;
+  animation: badge-pop 0.4s steps(5, end);
+}
+@keyframes badge-pop {
+  0% { transform: scale(0.2) rotate(-25deg); }
+  60% { transform: scale(1.35) rotate(8deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+.team-score-next {
+  color: var(--color-sand);
+  text-shadow: var(--text-shadow-pixel);
+  font-size: 16px;
+  min-height: 20px;
+  margin: 6px 0 0;
+}
+
 .team-score-points {
   color: #fff6dc;
-  font-size: clamp(44px, 12vw, 64px);
+  font-size: clamp(34px, 9vw, 46px);
   line-height: 1;
   margin: 4px 0 2px;
   text-shadow: 3px 3px 0 var(--color-lumen-pink), 6px 6px 0 var(--color-abyss);
@@ -1041,7 +1086,8 @@ dialog::backdrop { background: #04101fc2; }
   .stage-status { animation: none; }
   .ball-key-item, .ball-key-item img, .ball-key-row::after { transition: none; }
   .ball-key-item.is-lit, .team-rail-slot.is-filled { animation: none; }
-  .team-score, .team-slot-points { transition: none; }
+  .team-slot-points { transition: none; }
+  .badge-slot.is-earned img { animation: none; }
   .dialog-close, .menu-nav a, .keep-diving { transition: none; }
 }
 

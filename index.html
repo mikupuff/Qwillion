@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="css/styles.css?v=9" />
+<link rel="stylesheet" href="css/styles.css?v=12" />
 </head>
 <body>
 
@@ -62,12 +62,14 @@
       <section class="team-reveal" id="teamReveal" hidden>
         <p class="quiz-kicker">Your team</p>
         <h3 class="team-reveal-heading">Six caught. Nice dive.</h3>
-        <div class="team-score" id="teamScore" aria-live="polite">
-          <p class="team-score-label">Final score</p>
-          <p class="team-score-points"><span id="teamScoreValue">0</span> pts</p>
-          <p class="team-score-sub"><span id="teamScoreDepth">0 m deep</span> &middot; <span id="teamScoreMax"></span></p>
-        </div>
         <div class="team-grid" id="teamGrid"></div>
+        <div class="team-score" id="teamScore">
+          <p class="team-score-label">Badge case</p>
+          <ol class="badge-case" id="badgeCase"></ol>
+          <p class="team-score-points" aria-live="polite"><span id="teamBadgeCount">0</span> / 8 badges</p>
+          <p class="team-score-sub"><span id="teamScoreValue">0</span> pts &middot; <span id="teamScoreDepth">0 m deep</span></p>
+          <p class="team-score-next" id="teamScoreNext"></p>
+        </div>
         <button type="button" class="quiz-next" id="playAgainBtn">New team &#8635;</button>
       </section>
 
@@ -143,7 +145,7 @@
       <a href="#" id="navDevMode"><span class="symbol">&#128295;</span>Dev Mode</a>
       <a href="#"><span class="symbol">?</span>FAQ</a>
     </nav>
-    <p class="menu-footer">Qwillion is a fan-made, non-commercial project. Pok&eacute;mon data via PokeAPI. Catch rarity is estimated from Bulbapedia's 2026 most/least-visited article rankings, Google Trends search interest (via poke-trends.com, generation-bias corrected), and a 2019 favorite-Pok&eacute;mon survey. Not affiliated with Nintendo, Game Freak, or The Pok&eacute;mon Company.</p>
+    <p class="menu-footer">Qwillion is a fan-made, non-commercial project. Pok&eacute;mon data via PokeAPI. Catch rarity is estimated from Bulbapedia's 2026 most/least-visited article rankings, Google Trends search interest (via poke-trends.com, generation-bias corrected), and a 2019 favorite-Pok&eacute;mon survey. Badge sprites from the Pok&eacute;mon HeartGold/SoulSilver badge case, ripped by Kyo Wolf (The Spriters Resource). Not affiliated with Nintendo, Game Freak, or The Pok&eacute;mon Company.</p>
   </div>
 </dialog>
 
@@ -176,9 +178,9 @@
 <script src="data/popularity-survey-2019.js"></script>
 <script src="data/popularity-bulbapedia-2026.js"></script>
 <script src="data/popularity-googletrends.js"></script>
-<script src="js/quiz.js?v=11"></script>
+<script src="js/quiz.js?v=14"></script>
 <script src="js/catch-anim.js?v=7"></script>
-<script src="js/run-quiz-ui.js?v=9"></script>
+<script src="js/run-quiz-ui.js?v=13"></script>
 <script src="js/quiz-ui.js?v=7"></script>
 <script src="js/app.js?v=7"></script>
 </body>
